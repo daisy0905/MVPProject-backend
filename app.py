@@ -309,57 +309,57 @@ def enquiries():
             else:
                 return Response("Something went wrong!", mimetype="text/html", status=500)
     
-    # elif request.method == 'PATCH':
-    #     conn = None
-    #     cursor = None
-    #     token = request.json.get("token")
-    #     comment_content = request.json.get("content")
-    #     comment_image = request.json.get("image")
-    #     comment_id = request.json.get("id")
-    #     user = None
-    #     rows = None
-    #     comment = None
-    #     try:
-    #         conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
-    #         cursor = conn.cursor() 
-    #         cursor.execute("SELECT * FROM user_session WHERE loginToken=?", [token,])
-    #         user = cursor.fetchone()
-    #         print(user)
-    #         if user != None and user != []:
-    #             user_id = user[2]
-    #             print(user_id)
-    #             if comment_content != "" and comment_content != None:
-    #                 cursor.execute("UPDATE comment SET content=? WHERE id=? AND user_id=?", [comment_content, comment_id, user_id])
-    #             if comment_image != "" and comment_image != None:
-    #                 cursor.execute("UPDATE comment SET image=? WHERE id=? AND user_id=?", [comment_image, comment_id, user_id])
-    #             conn.commit()
-    #             rows = cursor.rowcount
-    #             print(rows)
-    #             cursor.execute("SELECT comment.id, comment.content, comment.image, comment.created_at, comment.user_id, comment.tweet_id, users.username FROM comment INNER JOIN users ON comment.user_id = users.id WHERE comment.id=?", [comment_id])
-    #             comment_row = cursor.fetchone()
-    #             print(comment_row)
-    #             comment = {}
-    #             headers = [i[0] for i in cursor.description]
-    #             comment = dict(zip(headers, comment_row))
-    #             print(comment)
-    #     except mariadb.dataError:
-    #         print("There seems to be something wrong with your data.")
-    #     except mariadb.databaseError:
-    #         print("There seems to be something wrong with your database.")
-    #     except mariadb.ProgrammingError:
-    #         print("There seems to be something wrong with SQL written.")
-    #     except mariadb.OperationalError:
-    #         print("There seems to be something wrong with the connection.")
-    #     finally:
-    #         if cursor != None:
-    #             cursor.close()
-    #         if conn != None:
-    #             conn.rollback()
-    #             conn.close()
-    #         if rows == 1:
-    #             return Response(json.dumps(comment, default=str), mimetype="application/json", status=200)
-    #         else:
-    #             return Response("Updated failed", mimetype="text/html", status=500)
+    elif request.method == 'PATCH':
+        conn = None
+        cursor = None
+        token = request.json.get("token")
+        comment_content = request.json.get("content")
+        comment_image = request.json.get("image")
+        comment_id = request.json.get("id")
+        user = None
+        rows = None
+        comment = None
+        try:
+            conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
+            cursor = conn.cursor() 
+            cursor.execute("SELECT * FROM user_session WHERE loginToken=?", [token,])
+            user = cursor.fetchone()
+            print(user)
+            if user != None and user != []:
+                user_id = user[2]
+                print(user_id)
+                if comment_content != "" and comment_content != None:
+                    cursor.execute("UPDATE comment SET content=? WHERE id=? AND user_id=?", [comment_content, comment_id, user_id])
+                if comment_image != "" and comment_image != None:
+                    cursor.execute("UPDATE comment SET image=? WHERE id=? AND user_id=?", [comment_image, comment_id, user_id])
+                conn.commit()
+                rows = cursor.rowcount
+                print(rows)
+                cursor.execute("SELECT comment.id, comment.content, comment.image, comment.created_at, comment.user_id, comment.tweet_id, users.username FROM comment INNER JOIN users ON comment.user_id = users.id WHERE comment.id=?", [comment_id])
+                comment_row = cursor.fetchone()
+                print(comment_row)
+                comment = {}
+                headers = [i[0] for i in cursor.description]
+                comment = dict(zip(headers, comment_row))
+                print(comment)
+        except mariadb.dataError:
+            print("There seems to be something wrong with your data.")
+        except mariadb.databaseError:
+            print("There seems to be something wrong with your database.")
+        except mariadb.ProgrammingError:
+            print("There seems to be something wrong with SQL written.")
+        except mariadb.OperationalError:
+            print("There seems to be something wrong with the connection.")
+        finally:
+            if cursor != None:
+                cursor.close()
+            if conn != None:
+                conn.rollback()
+                conn.close()
+            if rows == 1:
+                return Response(json.dumps(comment, default=str), mimetype="application/json", status=200)
+            else:
+                return Response("Updated failed", mimetype="text/html", status=500)
     
     elif request.method == 'DELETE':
         conn = None
