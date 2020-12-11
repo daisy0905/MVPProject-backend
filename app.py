@@ -226,7 +226,7 @@ def enquiries():
             conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
             cursor = conn.cursor()
             if art_id != None and art_id != "":
-                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.art_id=? ORDER BY enquiry.created_at DESC", [art_id])
+                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.art_id=? ORDER BY enquiry.created_at DESC", [art_id])
                 rows = cursor.fetchall()
                 print(rows)
                 enquiries = []
@@ -238,7 +238,7 @@ def enquiries():
                     enquiries.append(enquiry)
                     print(enquiries)
             else:
-                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id ORDER BY enquiry.created_at DESC")
+                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id ORDER BY enquiry.created_at DESC")
                 rows = cursor.fetchall()
                 enquiries = []
                 headers = [i[0] for i in cursor.description]
@@ -272,19 +272,20 @@ def enquiries():
         firstname = request.json.get("firstname")
         lastname = request.json.get("lastname")
         email = request.json.get("email")
+        phone_number = request.json.get("phone_number")
         message = request.json.get("message")
         rows = None
         comment = None
         try:
             conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO enquiry(firstname, lastname, email, message, art_id) VALUES(?, ?, ?, ?, ?)", [firstname, lastname, email, message, art_id])
+            cursor.execute("INSERT INTO enquiry(firstname, lastname, email, phone_number, message, art_id) VALUES(?, ?, ?, ?, ?, ?)", [firstname, lastname, email, phone_number, message, art_id])
             conn.commit()
             rows = cursor.rowcount
             if rows == 1:
                 enquiry_id = cursor.lastrowid
                 print(enquiry_id)
-                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.id=?", [enquiry_id])
+                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.id=?", [enquiry_id])
                 row = cursor.fetchone()
                 print(row)
                 enquiry = {}
