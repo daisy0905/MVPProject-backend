@@ -27,10 +27,6 @@ def artwork():
                 headers = [i[0] for i in cursor.description]
                 for row in rows:
                     artwork = dict(zip(headers, row))
-                    # cursor.execute("SELECT COUNT(*) FROM tweet_like WHERE tweet_id=?", [tweet['id']])
-                    # like_amount = cursor.fetchone()[0]
-                    # print(like_amount)
-                    # tweet["like_amount"] = like_amount
                     artworks.append(artwork)
                 print(artworks)
             elif content != None and content != "":
@@ -40,10 +36,6 @@ def artwork():
                 headers = [i[0] for i in cursor.description]
                 for row in rows:
                     artwork = dict(zip(headers, row))
-                    # cursor.execute("SELECT COUNT(*) FROM tweet_like WHERE tweet_id=?", [tweet['id']])
-                    # like_amount = cursor.fetchone()[0]
-                    # print(like_amount)
-                    # tweet["like_amount"] = like_amount
                     artworks.append(artwork)
                 print(artworks)
             elif id == None or id == "" or content == None or content == "":
@@ -53,10 +45,6 @@ def artwork():
                 headers = [i[0] for i in cursor.description]
                 for row in rows:
                     artwork = dict(zip(headers, row))
-                    # cursor.execute("SELECT COUNT(*) FROM tweet_like WHERE tweet_id=?", [tweet['id']])
-                    # like_amount = cursor.fetchone()[0]
-                    # print(like_amount)
-                    # tweet["like_amount"] = like_amount
                     artworks.append(artwork)
                 print(artworks)
         except mariadb.dataError:
@@ -85,6 +73,7 @@ def artwork():
         length = request.json.get("length")
         width = request.json.get("width")
         completed_at = request.json.get("completed_at")
+        material = request.json.get("material")
         category = request.json.get("category")
         status = request.json.get("status")
         url = request.json.get("url")
@@ -93,7 +82,7 @@ def artwork():
         try:
             conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO artwork(name, length, width, completed_at, category, status, url) VALUES(?, ?, ?, ?, ?, ?, ?)", [name, length, width, completed_at, category, status, url])
+            cursor.execute("INSERT INTO artwork(name, length, width, completed_at, material, category, status, url) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", [name, length, width, completed_at, material, category, status, url])
             conn.commit()
             rows = cursor.rowcount
             if rows == 1:
@@ -226,7 +215,7 @@ def enquiries():
             conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
             cursor = conn.cursor()
             if art_id != None and art_id != "":
-                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.art_id=? ORDER BY enquiry.created_at DESC", [art_id])
+                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, enquiry.review, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.art_id=? ORDER BY enquiry.created_at DESC", [art_id])
                 rows = cursor.fetchall()
                 print(rows)
                 enquiries = []
@@ -238,7 +227,7 @@ def enquiries():
                     enquiries.append(enquiry)
                     print(enquiries)
             else:
-                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id ORDER BY enquiry.created_at DESC")
+                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, enquiry.review, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id ORDER BY enquiry.created_at DESC")
                 rows = cursor.fetchall()
                 enquiries = []
                 headers = [i[0] for i in cursor.description]
@@ -274,18 +263,19 @@ def enquiries():
         email = request.json.get("email")
         phone_number = request.json.get("phone_number")
         message = request.json.get("message")
+        review = request.json.get("review")
         rows = None
         comment = None
         try:
             conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO enquiry(firstname, lastname, email, phone_number, message, art_id) VALUES(?, ?, ?, ?, ?, ?)", [firstname, lastname, email, phone_number, message, art_id])
+            cursor.execute("INSERT INTO enquiry(firstname, lastname, email, phone_number, message, review, art_id) VALUES(?, ?, ?, ?, ?, ?, ?)", [firstname, lastname, email, phone_number, message, review, art_id])
             conn.commit()
             rows = cursor.rowcount
             if rows == 1:
                 enquiry_id = cursor.lastrowid
                 print(enquiry_id)
-                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.id=?", [enquiry_id])
+                cursor.execute("SELECT enquiry.id, enquiry.firstname, enquiry.lastname, enquiry.message, enquiry.email, enquiry.phone_number, enquiry.created_at, enquiry.art_id, enquiry.review, artwork.name, artwork.url FROM enquiry INNER JOIN artwork ON enquiry.art_id = artwork.id WHERE enquiry.id=?", [enquiry_id])
                 row = cursor.fetchone()
                 print(row)
                 enquiry = {}
@@ -313,36 +303,17 @@ def enquiries():
     elif request.method == 'PATCH':
         conn = None
         cursor = None
-        token = request.json.get("token")
-        comment_content = request.json.get("content")
-        comment_image = request.json.get("image")
-        comment_id = request.json.get("id")
+        enquiry_id = request.json.get("id")
+        review = request.json.get("review")
         user = None
         rows = None
         comment = None
         try:
             conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
             cursor = conn.cursor() 
-            cursor.execute("SELECT * FROM user_session WHERE loginToken=?", [token,])
-            user = cursor.fetchone()
-            print(user)
-            if user != None and user != []:
-                user_id = user[2]
-                print(user_id)
-                if comment_content != "" and comment_content != None:
-                    cursor.execute("UPDATE comment SET content=? WHERE id=? AND user_id=?", [comment_content, comment_id, user_id])
-                if comment_image != "" and comment_image != None:
-                    cursor.execute("UPDATE comment SET image=? WHERE id=? AND user_id=?", [comment_image, comment_id, user_id])
-                conn.commit()
-                rows = cursor.rowcount
-                print(rows)
-                cursor.execute("SELECT comment.id, comment.content, comment.image, comment.created_at, comment.user_id, comment.tweet_id, users.username FROM comment INNER JOIN users ON comment.user_id = users.id WHERE comment.id=?", [comment_id])
-                comment_row = cursor.fetchone()
-                print(comment_row)
-                comment = {}
-                headers = [i[0] for i in cursor.description]
-                comment = dict(zip(headers, comment_row))
-                print(comment)
+            cursor.execute("UPDATE enquiry SET review=? WHERE id=?", [review, enquiry_id])
+            conn.commit()
+            rows = cursor.rowcount
         except mariadb.dataError:
             print("There seems to be something wrong with your data.")
         except mariadb.databaseError:
@@ -358,9 +329,9 @@ def enquiries():
                 conn.rollback()
                 conn.close()
             if rows == 1:
-                return Response(json.dumps(comment, default=str), mimetype="application/json", status=200)
+                return Response("Updated Success!", mimetype="text/html", status=204)
             else:
-                return Response("Updated failed", mimetype="text/html", status=500)
+                return Response("Updated failed!", mimetype="text/html", status=500)
     
     elif request.method == 'DELETE':
         conn = None
