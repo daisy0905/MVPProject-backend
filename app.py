@@ -362,3 +362,174 @@ def enquiries():
                 return Response("Delete Success", mimetype="text/html", status=204)
             else:
                 return Response("Delete failed", mimetype="text/html", status=500)
+
+@app.route('/visitor', methods=['GET', 'POST', 'PATCH', 'DELETE'])
+def users():
+    if request.method == 'GET':
+        conn = None
+        cursor = None
+        visitor_id = request.args.get("id")
+        visitors = None
+        try:
+            conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
+            cursor = conn.cursor()
+            if visitor_id != None and visitor_id != "":
+                cursor.execute("SELECT * FROM visitor WHERE id=?", [visitor_id])
+                rows = cursor.fetchall()
+                visitors = []
+                headers = [i[0] for i in cursor.description]
+                for row in rows:
+                    visitor = dict(zip(headers, row))
+                    visitors.append(visitor)
+                print(visitors)
+            else:
+                cursor.execute("SELECT * FROM visitor")
+                rows = cursor.fetchall()
+                visitors = []
+                headers = [i[0] for i in cursor.description]
+                for row in rows:
+                    visitor = dict(zip(headers, row))
+                    visitors.append(visitor)
+                print(users)
+        except mariadb.dataError:
+            print("There seems to be something wrong with your data.")
+        except mariadb.databaseError:
+            print("There seems to be something wrong with your database.")
+        except mariadb.ProgrammingError:
+            print("There seems to be something wrong with SQL written.")
+        except mariadb.OperationalError:
+            print("There seems to be something wrong with the connection.")
+        finally:
+            if(cursor != None):
+                cursor.close()
+            if(conn != None):
+                conn.rollback()
+                conn.close()
+            if(users != None):
+                return Response(json.dumps(visitors, default=str), mimetype="application/json", status=200)
+            else:
+                return Response("Something went wrong!", mimetype="text/html", status=500)
+
+    elif request.method == 'POST':
+        conn = None
+        cursor = None
+        firstname = request.json.get("firstname")
+        lastname = request.json.get("lastname")
+        phone_number = request.json.get("phone_number")
+        email = request.json.get("email")
+        wechat = request.json.get("wechat")
+        rows = None
+        visitor = None
+        try:
+            conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO visitor(firstname, lastname, phone_number, email, wechat) VALUES(?, ?, ?, ?, ?)", [firstname, lastname, phone_number, email, wechat])
+            conn.commit()
+            rows = cursor.rowcount
+            print(rows)
+            if rows == 1:
+                visitor_id = cursor.lastrowid
+                print(visitor_id)
+                cursor.execute("SELECT * FROM visitor WHERE id=?", [visitor_id])
+                visitor_row = cursor.fetchone()
+                visitor = {}
+                headers = [i[0] for i in cursor.description]
+                visitor = dict(zip(headers, visitor_row))
+        except mariadb.dataError:
+            print("There seems to be something wrong with your data.")
+        except mariadb.databaseError:
+            print("There seems to be something wrong with your database.")
+        except mariadb.ProgrammingError:
+            print("There seems to be something wrong with SQL written.")
+        except mariadb.OperationalError:
+            print("There seems to be something wrong with the connection.")
+        finally:
+            if(cursor != None):
+                cursor.close()
+            if(conn != None):
+                conn.rollback()
+                conn.close()
+            if(rows == 1):
+                return Response(json.dumps(visitor, default=str), mimetype="application/json", status=201)
+            else:
+                return Response("Something went wrong!", mimetype="text/html", status=500)
+    
+    elif request.method == 'PATCH':
+        conn = None
+        cursor = None
+        firstname = request.json.get("firstname")
+        lastname = request.json.get("lastname")
+        phone_number = request.json.get("phone_number")
+        email = request.json.get("email")
+        wechat = request.json.get("wechat")
+        visitor_id = request.json.get("id")
+        rows = None
+        visitor = None
+        try:
+            conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
+            cursor = conn.cursor() 
+            if firstname != "" and firstname != None:
+                cursor.execute("UPDATE visitor SET firstname=? WHERE id=?", [firstname, visitor_id])
+            if lastname != "" and lastname != None:
+                cursor.execute("UPDATE visitor SET lastname=? WHERE id=?", [lastname, visitor_id])
+            if phone_number != "" and phone_number != None:
+                cursor.execute("UPDATE visitor SET phone_number=? WHERE id=?", [phone_number, visitor_id])
+            if email != "" and email != None:
+                cursor.execute("UPDATE visitor SET email=? WHERE id=?", [email, visitor_id])
+            if wechat != "" and wechat != None:
+                cursor.execute("UPDATE visitor SET wechat=? WHERE id=?", [wechat, visitor_id])
+            conn.commit()
+            rows = cursor.rowcount
+            cursor.execute("SELECT * FROM visitor WHERE id=?", [visitor_id])
+            visitor_row = cursor.fetchone()
+            visitor = {}
+            headers = [i[0] for i in cursor.description]
+            visitor = dict(zip(headers, visitor_row))
+        except mariadb.dataError:
+            print("There seems to be something wrong with your data.")
+        except mariadb.databaseError:
+            print("There seems to be something wrong with your database.")
+        except mariadb.ProgrammingError:
+            print("There seems to be something wrong with SQL written.")
+        except mariadb.OperationalError:
+            print("There seems to be something wrong with the connection.")
+        finally:
+            if(cursor != None):
+                cursor.close()
+            if(conn != None):
+                conn.rollback()
+                conn.close()
+            if(rows == 1):
+                return Response(json.dumps(visitor, default=str), mimetype="application/json", status=200)
+            else:
+                return Response("Something went wrong!", mimetype="text/html", status=500)
+
+    elif request.method == 'DELETE':
+        conn = None
+        cursor = None
+        rows = None
+        visitor_id = request.json.get("id")
+        try:
+            conn = mariadb.connect(user=dbcreds.user, password=dbcreds.password, port=dbcreds.port, database=dbcreds.database, host=dbcreds.host)
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM visitor WHERE id=?", [visitor_id,])
+            conn.commit()
+            rows = cursor.rowcount
+        except mariadb.dataError:
+            print("There seems to be something wrong with your data.")
+        except mariadb.databaseError:
+            print("There seems to be something wrong with your database.")
+        except mariadb.ProgrammingError:
+            print("There seems to be something wrong with SQL written.")
+        except mariadb.OperationalError:
+            print("There seems to be something wrong with the connection.")
+        finally:
+            if cursor != None:
+                cursor.close()
+            if conn != None:
+                conn.rollback()
+                conn.close()
+            if rows == 1:
+                return Response("Delete account success!", mimetype="text/html", status=204)
+            else:
+                return Response("Something went wrong!", mimetype="text/html", status=500)
