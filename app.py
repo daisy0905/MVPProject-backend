@@ -8,7 +8,7 @@ import random
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/artwork', methods=['GET', 'POST', 'PATCH', 'DELETE'])
+@app.route('/api/artwork', methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def artwork():
     if request.method == 'GET':
         conn = None
@@ -203,7 +203,7 @@ def artwork():
             else:
                 return Response("Delete failed", mimetype="text/html", status=500)
 
-@app.route('/enquiry', methods=['GET', 'POST', 'PATCH', 'DELETE'])
+@app.route('/api/enquiry', methods=['GET', 'POST', 'PATCH', 'DELETE'])
 def enquiries():
     if request.method == 'GET':
         conn = None
@@ -363,8 +363,8 @@ def enquiries():
             else:
                 return Response("Delete failed", mimetype="text/html", status=500)
 
-@app.route('/visitor', methods=['GET', 'POST', 'PATCH', 'DELETE'])
-def users():
+@app.route('/api/visitor', methods=['GET', 'POST', 'PATCH', 'DELETE'])
+def visitor():
     if request.method == 'GET':
         conn = None
         cursor = None
@@ -405,7 +405,7 @@ def users():
             if(conn != None):
                 conn.rollback()
                 conn.close()
-            if(users != None):
+            if(visitors != None):
                 return Response(json.dumps(visitors, default=str), mimetype="application/json", status=200)
             else:
                 return Response("Something went wrong!", mimetype="text/html", status=500)
